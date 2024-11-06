@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Bicicletas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Bienvenido al Sistema de Gestión de Bicicletas</h1>
+        {% if current_user.is_authenticated %}
+            <p>Hola, {{ current_user.nombre }}!</p>
+            <p><a href="{{ url_for('logout') }}" class="button">Cerrar Sesión</a></p>
+            <p><a href="{{ url_for('reservar') }}" class="button">Reservar una Bicicleta</a></p>
+        {% else %}
+            <p>Para acceder al sistema, por favor <a href="{{ url_for('login') }}">inicia sesión</a> o <a href="{{ url_for('register') }}">regístrate</a>.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
