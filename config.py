@@ -2,5 +2,5 @@ import os
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'supersecretkey'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///bikes.db'
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///base_datos.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
