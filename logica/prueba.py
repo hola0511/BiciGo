@@ -24,7 +24,7 @@ class Administrador(Usuario):
 class GestorUsuarios:
     @staticmethod
     def registrar_usuario(nombre, correo, contrasena, rol):
-        with sqlite3.connect('../base_de_datos.db', timeout=10) as conn:
+        with sqlite3.connect('base_de_datos.db') as conn:
             cursor = conn.cursor()
             if rol:
                 cursor.execute("INSERT INTO Administrador (nombre, correo, contrasena) VALUES (?, ?, ?)",
@@ -37,7 +37,7 @@ class GestorUsuarios:
 
     @staticmethod
     def login_usuario(correo, contrasena, rol):
-        with sqlite3.connect('../base_de_datos.db', timeout=10) as conn:
+        with sqlite3.connect('base_de_datos.db') as conn:
             cursor = conn.cursor()
             if rol:
                 cursor.execute("SELECT * FROM Administrador WHERE correo = ? AND contrasena = ?", (correo, contrasena))
@@ -63,12 +63,30 @@ class Estacion:
 # Clase GestorEstacion para manejar estaciones
 class GestorEstacion:
     @staticmethod
-    def quitar_bicicleta(id_estacion):
-        print(f"Bicicleta quitada de la estación {id_estacion}")
+    def agregar_estacion(nombre, ubicacion, id_administrador):
+        with sqlite3.connect('base_de_datos.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO Estacion (nombre, ubicacion, id_administrador) VALUES (?, ?, ?)",
+                           (nombre, ubicacion, id_administrador))
+            conn.commit()
+            print("Estación agregada exitosamente.")
 
     @staticmethod
-    def anadir_bicicleta(id_estacion):
-        print(f"Bicicleta añadida a la estación {id_estacion}")
+    def editar_estacion(id_estacion, nombre, ubicacion):
+        with sqlite3.connect('base_de_datos.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE Estacion SET nombre = ?, ubicacion = ? WHERE id = ?",
+                           (nombre, ubicacion, id_estacion))
+            conn.commit()
+            print("Estación editada exitosamente.")
+
+    @staticmethod
+    def eliminar_estacion(id_estacion):
+        with sqlite3.connect('base_de_datos.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM Estacion WHERE id = ?", (id_estacion,))
+            conn.commit()
+            print("Estación eliminada exitosamente.")
 
 # Clase Bicicleta
 class Bicicleta:
@@ -88,18 +106,18 @@ class Queja:
 # Clase GestorCliente para manejar quejas e historial
 class GestorCliente:
     @staticmethod
-    def crear_queja(cliente, razon):
-        with sqlite3.connect('../base_de_datos.db', timeout=10) as conn:
+    def crear_queja(cliente_id, razon):
+        with sqlite3.connect('base_de_datos.db') as conn:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO Queja (id_cliente, razon, estado) VALUES (?, ?, ?)", (cliente, razon, False))
+            cursor.execute("INSERT INTO Queja (id_cliente, razon, estado) VALUES (?, ?, ?)", (cliente_id, razon, False))
             conn.commit()
             print("Queja registrada exitosamente.")
 
     @staticmethod
-    def consultar_historial(id_cliente):
-        with sqlite3.connect('../base_de_datos.db', timeout=10) as conn:
+    def consultar_historial(cliente_id):
+        with sqlite3.connect('base_de_datos.db') as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM Reserva WHERE id_cliente = ?", (id_cliente,))
+            cursor.execute("SELECT * FROM Reserva WHERE id_cliente = ?", (cliente_id,))
             reservas = cursor.fetchall()
             print("Historial de reservas:")
             for reserva in reservas:
@@ -116,26 +134,26 @@ class Reserva:
 # Clase GestorReserva para manejar reservas
 class GestorReserva:
     @staticmethod
-    def crear_reserva(id_cliente, id_estacion, id_distancia):
+    def crear_reserva(cliente_id, estacion_id, distancia_id):
         fecha = datetime.now().strftime('%Y-%m-%d')
         hora = datetime.now().strftime('%H:%M:%S')
-        with sqlite3.connect('../base_de_datos.db', timeout=10) as conn:
+        with sqlite3.connect('base_de_datos.db') as conn:
             cursor = conn.cursor()
             cursor.execute("INSERT INTO Reserva (fecha, hora, id_cliente, id_estacion, id_distancia) VALUES (?, ?, ?, ?, ?)",
-                           (fecha, hora, id_cliente, id_estacion, id_distancia))
+                           (fecha, hora, cliente_id, estacion_id, distancia_id))
             conn.commit()
             print("Reserva creada exitosamente.")
 
     @staticmethod
-    def eliminar_reserva(id_reserva):
-        with sqlite3.connect('../base_de_datos.db', timeout=10) as conn:
+    def eliminar_reserva(reserva_id):
+        with sqlite3.connect('base_de_datos.db') as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM Reserva WHERE id = ?", (id_reserva,))
+            cursor.execute("DELETE FROM Reserva WHERE id = ?", (reserva_id,))
             conn.commit()
             print("Reserva eliminada exitosamente.")
 
 # Clase Notificacion para manejar alertas
 class Notificacion:
     @staticmethod
-    def enviar_notificacion(id_cliente, mensaje):
-        print(f"Notificación para el cliente {id_cliente}: {mensaje}")
+    def enviar_notificacion(cliente_id, mensaje):
+        print(f"Notificación para el cliente {cliente_id}: {mensaje}")

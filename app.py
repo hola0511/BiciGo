@@ -1,6 +1,5 @@
 from logica import GestorUsuarios, GestorCliente, GestorReserva, GestorEstacion, Notificacion
 
-
 class Menu:
     def __init__(self):
         self.usuario_actual = None
