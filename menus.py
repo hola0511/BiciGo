@@ -105,7 +105,8 @@ class Menu:
 
     def crear_queja(self):
         razon = input("Ingrese el motivo de su queja: ")
-        GestorCliente.crear_queja(self.usuario_actual.id, razon)
+        id_estacion = int(input("Ingrese el ID de la estación relacionada con la queja: "))
+        GestorCliente.crear_queja(self.usuario_actual.id, razon, id_estacion)
 
     def agregar_estacion(self):
         nombre = input("Ingrese el nombre de la estación: ")
