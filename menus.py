@@ -95,8 +95,6 @@ class MenuApp:
             pady=10)
         tk.Button(self.root, text="Cerrar Sesión", command=self.crear_menu_principal, font=("Arial", 14), padx=10,
                   pady=5, bg="#FFCCCC").pack(pady=10)
-        tk.Button(self.root, text="Volver", command=self.crear_menu_principal, font=("Arial", 14), padx=10, pady=5,
-                  bg="#FFCCCC").pack(pady=10)
 
     def mostrar_menu_administrador(self):
         self.limpiar_ventana()
@@ -109,8 +107,6 @@ class MenuApp:
                   pady=5).pack(pady=10)
         tk.Button(self.root, text="Cerrar Sesión", command=self.crear_menu_principal, font=("Arial", 14), padx=10,
                   pady=5, bg="#FFCCCC").pack(pady=10)
-        tk.Button(self.root, text="Volver", command=self.crear_menu_principal, font=("Arial", 14), padx=10, pady=5,
-                  bg="#FFCCCC").pack(pady=10)
 
     def reservar_bicicleta(self):
         self.limpiar_ventana()
