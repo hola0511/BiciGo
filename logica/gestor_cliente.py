@@ -15,7 +15,5 @@ class GestorCliente:
         with sqlite3.connect('base_de_datos.db') as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM Reserva WHERE id_cliente = ?", (cliente_id,))
-            reservas = cursor.fetchall()
-            print("Historial de reservas:")
-            for reserva in reservas:
-                print(reserva)
+            reservas = cursor.fetchall()  # Obtener todas las reservas
+            return reservas  # Devuelve la lista de reservas

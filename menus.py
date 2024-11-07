@@ -1,4 +1,5 @@
 import tkinter as tk
+from tkinter import ttk
 from tkinter import messagebox
 from logica.gestor_usuarios import GestorUsuarios
 from logica.gestor_cliente import GestorCliente
@@ -132,9 +133,26 @@ class MenuApp:
     def consultar_historial(self):
         self.limpiar_ventana()
         tk.Label(self.root, text="Historial de Reservas", font=("Arial", 16)).pack(pady=10)
+
+        # Crear una tabla usando Treeview
+        columnas = ("fecha", "distancia", "tiempo", "hora")
+        tabla = ttk.Treeview(self.root, columns=columnas, show="headings", height=10)
+        tabla.heading("fecha", text="Fecha:")
+        tabla.heading("distancia", text="Distancia:")
+        tabla.heading("tiempo", text="Tiempo:")
+        tabla.heading("hora", text="Hora:")
+        tabla.column("fecha", anchor="center", width=150)
+        tabla.column("distancia", anchor="center", width=100)
+        tabla.column("tiempo", anchor="center", width=100)
+        tabla.column("hora", anchor="center", width=100)
         historial = GestorCliente.consultar_historial(self.usuario_actual.id)
-        for reserva in historial:
-            tk.Label(self.root, text=f"Reserva: {reserva}").pack()
+        if historial:
+            for reserva in historial:
+                fecha, distancia, tiempo, hora = reserva[1], f"{reserva[2]} KM", f"{reserva[3]} minutos", reserva[4]
+                tabla.insert("", "end", values=(fecha, distancia, tiempo, hora))
+        else:
+            messagebox.showinfo("Historial", "No hay reservas en el historial.")
+        tabla.pack(pady=10)
         self.volver_boton()
 
     def crear_queja(self):
