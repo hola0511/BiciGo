@@ -1,145 +1,125 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
-from flask_sqlalchemy import SQLAlchemy
-from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
-from werkzeug.security import generate_password_hash, check_password_hash
-from config import Config
-from models import db, Cliente, Administrador, Estacion, Bicicleta, Queja, Reserva, Distancia
-from forms import RegisterForm, LoginForm
+from logica import GestorUsuarios, GestorCliente, GestorReserva, GestorEstacion, Notificacion
 
-# Inicialización de la aplicación
-app = Flask(__name__)
-app.config.from_object(Config)
-db.init_app(app)
 
-# Configuración de Flask-Login
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'
+class Menu:
+    def __init__(self):
+        self.usuario_actual = None
 
-@login_manager.user_loader
-def load_user(user_id):
-    return Cliente.query.get(int(user_id))  # Asume que solo los clientes inician sesión
+    def mostrar_menu_principal(self):
+        while True:
+            print("\n---- Menú Principal ----")
+            print("1. Registrar Usuario")
+            print("2. Iniciar Sesión Cliente")
+            print("3. Iniciar Sesión Administrador")
+            print("4. Salir")
+            opcion = input("Seleccione una opción: ")
 
-# Ruta de inicio
-@app.route('/')
-def index():
-    return render_template('index.html')
+            if opcion == "1":
+                self.registrar_usuario()
+            elif opcion == "2":
+                self.iniciar_sesion_cliente()
+            elif opcion == "3":
+                self.iniciar_sesion_administrador()
+            elif opcion == "4":
+                print("Saliendo del sistema...")
+                break
+            else:
+                print("Opción inválida, intente nuevamente.")
 
-# Registro de clientes
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-    form = RegisterForm()
-    if form.validate_on_submit():
-        hashed_password = generate_password_hash(form.contraseña.data, method='sha256')
-        new_user = Cliente(nombre=form.nombre.data, correo=form.correo.data, contraseña=hashed_password)
-        db.session.add(new_user)
-        db.session.commit()
-        flash('Usuario registrado exitosamente.')
-        return redirect(url_for('login'))
-    return render_template('register.html', form=form)
+    def registrar_usuario(self):
+        nombre = input("Ingrese su nombre: ")
+        correo = input("Ingrese su correo: ")
+        contrasena = input("Ingrese su contraseña: ")
+        rol = input("Es administrador? (s/n): ").lower() == 's'
+        GestorUsuarios.registrar_usuario(nombre, correo, contrasena, rol)
 
-# Inicio de sesión
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    form = LoginForm()
-    if form.validate_on_submit():
-        user = Cliente.query.filter_by(correo=form.correo.data).first()
-        if user and check_password_hash(user.contraseña, form.contraseña.data):
-            login_user(user)
-            return redirect(url_for('index'))
-        flash('Correo o contraseña incorrectos')
-    return render_template('login.html', form=form)
+    def iniciar_sesion_cliente(self):
+        correo = input("Ingrese su correo: ")
+        contrasena = input("Ingrese su contraseña: ")
+        self.usuario_actual = GestorUsuarios.login_usuario(correo, contrasena, rol=False)
+        if self.usuario_actual:
+            self.mostrar_menu_usuario()
 
-# Cerrar sesión
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect(url_for('index'))
+    def iniciar_sesion_administrador(self):
+        correo = input("Ingrese su correo: ")
+        contrasena = input("Ingrese su contraseña: ")
+        self.usuario_actual = GestorUsuarios.login_usuario(correo, contrasena, rol=True)
+        if self.usuario_actual:
+            self.mostrar_menu_administrador()
 
-# Rutas para gestionar estaciones (para administradores)
-@app.route('/admin/estaciones', methods=['GET', 'POST'])
-@login_required
-def gestionar_estaciones():
-    if not current_user.is_authenticated or not isinstance(current_user, Administrador):
-        flash("Acceso denegado")
-        return redirect(url_for('index'))
+    def mostrar_menu_usuario(self):
+        while True:
+            print("\n---- Menú Usuario ----")
+            print("1. Reservar Bicicleta")
+            print("2. Consultar Historial de Reservas")
+            print("3. Crear Queja")
+            print("4. Cerrar Sesión")
+            opcion = input("Seleccione una opción: ")
 
-    if request.method == 'POST':
-        nombre = request.form.get('nombre')
-        ubicacion = request.form.get('ubicacion')
-        nueva_estacion = Estacion(id_administrador=current_user.id, nombre=nombre, ubicacion=ubicacion)
-        db.session.add(nueva_estacion)
-        db.session.commit()
-        flash("Estación añadida exitosamente")
+            if opcion == "1":
+                self.reservar_bicicleta()
+            elif opcion == "2":
+                self.consultar_historial()
+            elif opcion == "3":
+                self.crear_queja()
+            elif opcion == "4":
+                print("Cerrando sesión de usuario...")
+                self.usuario_actual = None
+                break
+            else:
+                print("Opción inválida, intente nuevamente.")
 
-    estaciones = Estacion.query.all()
-    return render_template('admin/estaciones.html', estaciones=estaciones)
+    def mostrar_menu_administrador(self):
+        while True:
+            print("\n---- Menú Administrador ----")
+            print("1. Agregar Estación")
+            print("2. Editar Estación")
+            print("3. Eliminar Estación")
+            print("4. Cerrar Sesión")
+            opcion = input("Seleccione una opción: ")
 
-# Reserva de bicicletas
-@app.route('/reservar', methods=['GET', 'POST'])
-@login_required
-def reservar():
-    estaciones = Estacion.query.all()
-    if request.method == 'POST':
-        estacion_id = request.form.get('estacion_id')
-        fecha = request.form.get('fecha')
-        hora = request.form.get('hora')
-        nueva_reserva = Reserva(id_cliente=current_user.id, id_estacion=estacion_id, fecha=fecha, hora=hora)
-        db.session.add(nueva_reserva)
-        db.session.commit()
-        flash("Reserva realizada exitosamente")
-        return redirect(url_for('index'))
-    return render_template('reservar.html', estaciones=estaciones)
+            if opcion == "1":
+                self.agregar_estacion()
+            elif opcion == "2":
+                self.editar_estacion()
+            elif opcion == "3":
+                self.eliminar_estacion()
+            elif opcion == "4":
+                print("Cerrando sesión de administrador...")
+                self.usuario_actual = None
+                break
+            else:
+                print("Opción inválida, intente nuevamente.")
 
-# Historial de reservas de clientes
-@app.route('/historial')
-@login_required
-def historial():
-    reservas = Reserva.query.filter_by(id_cliente=current_user.id).all()
-    return render_template('historial.html', reservas=reservas)
+    def reservar_bicicleta(self):
+        id_estacion = int(input("Ingrese el ID de la estación: "))
+        id_distancia = int(input("Ingrese el ID de la distancia: "))
+        GestorReserva.crear_reserva(self.usuario_actual.id, id_estacion, id_distancia)
 
-# Creación de tablas en la base de datos
-with app.app_context():
-    db.create_all()
+    def consultar_historial(self):
+        GestorCliente.consultar_historial(self.usuario_actual.id)
 
-    if not Cliente.query.first():  # Solo agrega registros si la tabla Cliente está vacía
-        # Crear un cliente de prueba
-        nuevo_cliente = Cliente(nombre="Juan Pérez", correo="juan@example.com", contraseña="password123")
-        db.session.add(nuevo_cliente)
+    def crear_queja(self):
+        razon = input("Ingrese el motivo de su queja: ")
+        GestorCliente.crear_queja(self.usuario_actual.id, razon)
 
-        # Crear un administrador de prueba y guardar en la base de datos
-        nuevo_admin = Administrador(nombre="Admin Uno", correo="admin@example.com", contraseña="adminpassword")
-        db.session.add(nuevo_admin)
-        db.session.commit()  # Guarda el administrador para que tenga un ID asignado
+    def agregar_estacion(self):
+        nombre = input("Ingrese el nombre de la estación: ")
+        ubicacion = input("Ingrese la ubicación de la estación: ")
+        GestorEstacion.agregar_estacion(nombre, ubicacion, self.usuario_actual.id)
 
-        # Crear una estación de prueba, utilizando el ID del administrador recién creado
-        nueva_estacion = Estacion(id_administrador=nuevo_admin.id, nombre="Estación Centro",
-                                  ubicacion="Centro de la Ciudad")
-        db.session.add(nueva_estacion)
+    def editar_estacion(self):
+        id_estacion = int(input("Ingrese el ID de la estación a editar: "))
+        nombre = input("Ingrese el nuevo nombre de la estación: ")
+        ubicacion = input("Ingrese la nueva ubicación de la estación: ")
+        GestorEstacion.editar_estacion(id_estacion, nombre, ubicacion)
 
-        # Guardar cambios en la base de datos
-        db.session.commit()
-        print("Registros de prueba añadidos a la base de datos.")
-    else:
-        print("Los registros de prueba ya existen en la base de datos.")
+    def eliminar_estacion(self):
+        id_estacion = int(input("Ingrese el ID de la estación a eliminar: "))
+        GestorEstacion.eliminar_estacion(id_estacion)
 
-    clientes = Cliente.query.all()
-    administradores = Administrador.query.all()
-    estaciones = Estacion.query.all()
 
-    print("Clientes guardados en la base de datos:")
-    for cliente in clientes:
-        print(f"ID: {cliente.id}, Nombre: {cliente.nombre}, Correo: {cliente.correo}")
-
-    print("\nAdministradores guardados en la base de datos:")
-    for admin in administradores:
-        print(f"ID: {admin.id}, Nombre: {admin.nombre}, Correo: {admin.correo}")
-
-    print("\nEstaciones guardadas en la base de datos:")
-    for estacion in estaciones:
-        print(
-            f"ID: {estacion.id}, Nombre: {estacion.nombre}, Ubicación: {estacion.ubicacion}, ID Administrador: {estacion.id_administrador}")
-
-if __name__ == '__main__':
-    app.run(debug=True)
+# Ejecutar menú principal
+if __name__ == "__main__":
+    menu = Menu()
+    menu.mostrar_menu_principal()
