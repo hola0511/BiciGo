@@ -1,124 +1,213 @@
+import tkinter as tk
+from tkinter import messagebox
 from logica.gestor_usuarios import GestorUsuarios
 from logica.gestor_cliente import GestorCliente
 from logica.gestor_reserva import GestorReserva
 from logica.gestor_estacion import GestorEstacion
 from logica.notificacion import Notificacion
 
-
-class Menu:
-    def __init__(self):
+class MenuApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Sistema de Gestión de Bicicletas")
+        self.root.geometry("720x480")
         self.usuario_actual = None
+        self.crear_menu_principal()
 
-    def mostrar_menu_principal(self):
-        while True:
-            print("\n---- Menú Principal ----")
-            print("1. Registrar Usuario")
-            print("2. Iniciar Sesión Cliente")
-            print("3. Iniciar Sesión Administrador")
-            print("4. Salir")
-            opcion = input("Seleccione una opción: ")
+    def crear_menu_principal(self):
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Menú Principal", font=("Arial", 16)).pack(pady=10)
+        tk.Button(self.root, text="Registrar Usuario", command=self.registrar_usuario, font=("Arial", 14), padx=10,
+                  pady=5).pack(pady=10)
+        tk.Button(self.root, text="Iniciar Sesión Cliente", command=self.iniciar_sesion_cliente, font=("Arial", 14),
+                  padx=10, pady=5).pack(pady=10)
+        tk.Button(self.root, text="Iniciar Sesión Administrador", command=self.iniciar_sesion_administrador,
+                  font=("Arial", 14), padx=10, pady=5).pack(pady=10)
+        tk.Button(self.root, text="Salir", command=self.root.quit, font=("Arial", 14), padx=10, pady=5,
+                  bg="#FFCCCC").pack(pady=10)
 
-            if opcion == "1":
-                self.registrar_usuario()
-            elif opcion == "2":
-                self.iniciar_sesion_cliente()
-            elif opcion == "3":
-                self.iniciar_sesion_administrador()
-            elif opcion == "4":
-                print("Saliendo del sistema...")
-                break
-            else:
-                print("Opción inválida, intente nuevamente.")
+    def limpiar_ventana(self):
+        for widget in self.root.winfo_children():
+            widget.destroy()
 
     def registrar_usuario(self):
-        nombre = input("Ingrese su nombre: ")
-        correo = input("Ingrese su correo: ")
-        contrasena = input("Ingrese su contraseña: ")
-        rol = input("Es administrador? (s/n): ").lower() == 's'
-        GestorUsuarios.registrar_usuario(nombre, correo, contrasena, rol)
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Registrar Usuario", font=("Arial", 16)).pack(pady=10)
+        tk.Label(self.root, text="Nombre:").pack()
+        nombre = tk.Entry(self.root, width=30)
+        nombre.pack()
+        tk.Label(self.root, text="Correo:").pack()
+        correo = tk.Entry(self.root, width=30)
+        correo.pack()
+        tk.Label(self.root, text="Contraseña:").pack()
+        contrasena = tk.Entry(self.root, show="*", width=30)
+        contrasena.pack()
+        rol = tk.IntVar()
+        tk.Checkbutton(self.root, text="Es administrador", variable=rol).pack(pady=5)
+
+        def registrar():
+            GestorUsuarios.registrar_usuario(nombre.get(), correo.get(), contrasena.get(), rol.get())
+            messagebox.showinfo("Registro", "Usuario registrado exitosamente")
+            self.crear_menu_principal()
+        tk.Button(self.root, text="Registrar", command=registrar, font=("Arial", 14), padx=10, pady=5).pack(pady=10)
+        tk.Button(self.root, text="Volver", command=self.crear_menu_principal, font=("Arial", 14), padx=10, pady=5,
+                  bg="#FFCCCC").pack(pady=10)
 
     def iniciar_sesion_cliente(self):
-        correo = input("Ingrese su correo: ")
-        contrasena = input("Ingrese su contraseña: ")
-        self.usuario_actual = GestorUsuarios.login_usuario(correo, contrasena, rol=False)
-        if self.usuario_actual:
-            self.mostrar_menu_usuario()
+        self.iniciar_sesion(rol=False)
 
     def iniciar_sesion_administrador(self):
-        correo = input("Ingrese su correo: ")
-        contrasena = input("Ingrese su contraseña: ")
-        self.usuario_actual = GestorUsuarios.login_usuario(correo, contrasena, rol=True)
-        if self.usuario_actual:
-            self.mostrar_menu_administrador()
+        self.iniciar_sesion(rol=True)
+
+    def iniciar_sesion(self, rol):
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Iniciar Sesión", font=("Arial", 16)).pack(pady=10)
+        tk.Label(self.root, text="Correo:").pack()
+        correo = tk.Entry(self.root, width=30)
+        correo.pack()
+        tk.Label(self.root, text="Contraseña:").pack()
+        contrasena = tk.Entry(self.root, show="*", width=30)
+        contrasena.pack()
+
+        def login():
+            self.usuario_actual = GestorUsuarios.login_usuario(correo.get(), contrasena.get(), rol)
+            if self.usuario_actual:
+                messagebox.showinfo("Inicio de sesión", "Inicio de sesión exitoso")
+                if rol:
+                    self.mostrar_menu_administrador()
+                else:
+                    self.mostrar_menu_usuario()
+            else:
+                messagebox.showerror("Error", "Credenciales incorrectas")
+        tk.Button(self.root, text="Iniciar sesión", command=login, font=("Arial", 14), padx=10, pady=5).pack(pady=10)
+        tk.Button(self.root, text="Volver", command=self.crear_menu_principal, font=("Arial", 14), padx=10, pady=5,
+                  bg="#FFCCCC").pack(pady=10)
 
     def mostrar_menu_usuario(self):
-        while True:
-            print("\n---- Menú Usuario ----")
-            print("1. Reservar Bicicleta")
-            print("2. Consultar Historial de Reservas")
-            print("3. Crear Queja")
-            print("4. Cerrar Sesión")
-            opcion = input("Seleccione una opción: ")
-
-            if opcion == "1":
-                self.reservar_bicicleta()
-            elif opcion == "2":
-                self.consultar_historial()
-            elif opcion == "3":
-                self.crear_queja()
-            elif opcion == "4":
-                print("Cerrando sesión de usuario...")
-                self.usuario_actual = None
-                break
-            else:
-                print("Opción inválida, intente nuevamente.")
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Menú Usuario", font=("Arial", 16)).pack(pady=10)
+        tk.Button(self.root, text="Reservar Bicicleta", command=self.reservar_bicicleta, font=("Arial", 14), padx=10,
+                  pady=5).pack(pady=10)
+        tk.Button(self.root, text="Consultar Historial de Reservas", command=self.consultar_historial,
+                  font=("Arial", 14), padx=10, pady=5).pack(pady=10)
+        tk.Button(self.root, text="Crear Queja", command=self.crear_queja, font=("Arial", 14), padx=10, pady=5).pack(
+            pady=10)
+        tk.Button(self.root, text="Cerrar Sesión", command=self.crear_menu_principal, font=("Arial", 14), padx=10,
+                  pady=5, bg="#FFCCCC").pack(pady=10)
+        tk.Button(self.root, text="Volver", command=self.crear_menu_principal, font=("Arial", 14), padx=10, pady=5,
+                  bg="#FFCCCC").pack(pady=10)
 
     def mostrar_menu_administrador(self):
-        while True:
-            print("\n---- Menú Administrador ----")
-            print("1. Agregar Estación")
-            print("2. Editar Estación")
-            print("3. Eliminar Estación")
-            print("4. Cerrar Sesión")
-            opcion = input("Seleccione una opción: ")
-
-            if opcion == "1":
-                self.agregar_estacion()
-            elif opcion == "2":
-                self.editar_estacion()
-            elif opcion == "3":
-                self.eliminar_estacion()
-            elif opcion == "4":
-                print("Cerrando sesión de administrador...")
-                self.usuario_actual = None
-                break
-            else:
-                print("Opción inválida, intente nuevamente.")
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Menú Administrador", font=("Arial", 16)).pack(pady=10)
+        tk.Button(self.root, text="Agregar Estación", command=self.agregar_estacion, font=("Arial", 14), padx=10,
+                  pady=5).pack(pady=10)
+        tk.Button(self.root, text="Editar Estación", command=self.editar_estacion, font=("Arial", 14), padx=10,
+                  pady=5).pack(pady=10)
+        tk.Button(self.root, text="Eliminar Estación", command=self.eliminar_estacion, font=("Arial", 14), padx=10,
+                  pady=5).pack(pady=10)
+        tk.Button(self.root, text="Cerrar Sesión", command=self.crear_menu_principal, font=("Arial", 14), padx=10,
+                  pady=5, bg="#FFCCCC").pack(pady=10)
+        tk.Button(self.root, text="Volver", command=self.crear_menu_principal, font=("Arial", 14), padx=10, pady=5,
+                  bg="#FFCCCC").pack(pady=10)
 
     def reservar_bicicleta(self):
-        id_estacion = int(input("Ingrese el ID de la estación: "))
-        id_distancia = int(input("Ingrese el ID de la distancia: "))
-        GestorReserva.crear_reserva(self.usuario_actual.id, id_estacion, id_distancia)
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Reservar Bicicleta", font=("Arial", 16)).pack(pady=10)
+        tk.Label(self.root, text="ID de la estación:").pack()
+        estacion_id = tk.Entry(self.root, width=30)
+        estacion_id.pack()
+        tk.Label(self.root, text="ID de la distancia:").pack()
+        distancia_id = tk.Entry(self.root, width=30)
+        distancia_id.pack()
+
+        def realizar_reserva():
+            GestorReserva.crear_reserva(self.usuario_actual.id, estacion_id.get(), distancia_id.get())
+            messagebox.showinfo("Reserva", "Reserva creada exitosamente")
+            self.crear_menu_principal()
+        tk.Button(self.root, text="Reservar", command=realizar_reserva, font=("Arial", 14), padx=10, pady=5).pack(
+            pady=10)
+        self.volver_boton()
 
     def consultar_historial(self):
-        GestorCliente.consultar_historial(self.usuario_actual.id)
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Historial de Reservas", font=("Arial", 16)).pack(pady=10)
+        historial = GestorCliente.consultar_historial(self.usuario_actual.id)
+        for reserva in historial:
+            tk.Label(self.root, text=f"Reserva: {reserva}").pack()
+        self.volver_boton()
 
     def crear_queja(self):
-        razon = input("Ingrese el motivo de su queja: ")
-        id_estacion = int(input("Ingrese el ID de la estación relacionada con la queja: "))
-        GestorCliente.crear_queja(self.usuario_actual.id, razon, id_estacion)
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Crear Queja", font=("Arial", 16)).pack(pady=10)
+        tk.Label(self.root, text="Motivo de la queja:").pack()
+        razon = tk.Entry(self.root, width=30)
+        razon.pack()
+        tk.Label(self.root, text="ID de la estación:").pack()
+        id_estacion = tk.Entry(self.root, width=30)
+        id_estacion.pack()
+
+        def registrar_queja():
+            GestorCliente.crear_queja(self.usuario_actual.id, razon.get(), id_estacion.get())
+            messagebox.showinfo("Queja", "Queja registrada exitosamente")
+            self.crear_menu_principal()
+        tk.Button(self.root, text="Registrar Queja", command=registrar_queja, font=("Arial", 14), padx=10, pady=5).pack(
+            pady=10)
+        self.volver_boton()
 
     def agregar_estacion(self):
-        nombre = input("Ingrese el nombre de la estación: ")
-        ubicacion = input("Ingrese la ubicación de la estación: ")
-        GestorEstacion.agregar_estacion(nombre, ubicacion, self.usuario_actual.id)
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Agregar Estación", font=("Arial", 16)).pack(pady=10)
+        tk.Label(self.root, text="Nombre de la estación:").pack()
+        nombre = tk.Entry(self.root, width=30)
+        nombre.pack()
+        tk.Label(self.root, text="Ubicación de la estación:").pack()
+        ubicacion = tk.Entry(self.root, width=30)
+        ubicacion.pack()
+
+        def agregar():
+            GestorEstacion.agregar_estacion(nombre.get(), ubicacion.get(), self.usuario_actual.id)
+            messagebox.showinfo("Estación", "Estación agregada exitosamente")
+            self.crear_menu_principal()
+        tk.Button(self.root, text="Agregar Estación", command=agregar, font=("Arial", 14), padx=10, pady=5).pack(
+            pady=10)
+        self.volver_boton()
 
     def editar_estacion(self):
-        id_estacion = int(input("Ingrese el ID de la estación a editar: "))
-        nombre = input("Ingrese el nuevo nombre de la estación: ")
-        ubicacion = input("Ingrese la nueva ubicación de la estación: ")
-        GestorEstacion.editar_estacion(id_estacion, nombre, ubicacion)
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Editar Estación", font=("Arial", 16)).pack(pady=10)
+        tk.Label(self.root, text="ID de la estación a editar:").pack()
+        id_estacion = tk.Entry(self.root, width=30)
+        id_estacion.pack()
+        tk.Label(self.root, text="Nuevo nombre de la estación:").pack()
+        nombre = tk.Entry(self.root, width=30)
+        nombre.pack()
+        tk.Label(self.root, text="Nueva ubicación de la estación:").pack()
+        ubicacion = tk.Entry(self.root, width=30)
+        ubicacion.pack()
+
+        def editar():
+            GestorEstacion.editar_estacion(id_estacion.get(), nombre.get(), ubicacion.get())
+            messagebox.showinfo("Estación", "Estación editada exitosamente")
+            self.crear_menu_principal()
+        tk.Button(self.root, text="Editar Estación", command=editar, font=("Arial", 14), padx=10, pady=5).pack(pady=10)
+        self.volver_boton()
 
     def eliminar_estacion(self):
-        id_estacion = int(input("Ingrese el ID de la estación a eliminar: "))
-        GestorEstacion.eliminar_estacion(id_estacion)
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Eliminar Estación", font=("Arial", 16)).pack(pady=10)
+        tk.Label(self.root, text="ID de la estación a eliminar:").pack()
+        id_estacion = tk.Entry(self.root, width=30)
+        id_estacion.pack()
+
+        def eliminar():
+            GestorEstacion.eliminar_estacion(id_estacion.get())
+            messagebox.showinfo("Estación", "Estación eliminada exitosamente")
+            self.crear_menu_principal()
+        tk.Button(self.root, text="Eliminar Estación", command=eliminar, font=("Arial", 14), padx=10, pady=5).pack(
+            pady=10)
+        self.volver_boton()
+
+    def volver_boton(self):
+        tk.Button(self.root, text="Volver", command=self.crear_menu_principal, font=("Arial", 14), padx=10, pady=5,
+                  bg="#FFCCCC").pack(pady=10)
