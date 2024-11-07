@@ -105,6 +105,8 @@ class MenuApp:
                   pady=5).pack(pady=10)
         tk.Button(self.root, text="Eliminar Estación", command=self.eliminar_estacion, font=("Arial", 14), padx=10,
                   pady=5).pack(pady=10)
+        tk.Button(self.root, text="Ver Quejas por Estación", command=self.ver_quejas_estacion, font=("Arial", 14),
+                  padx=10, pady=5).pack(pady=10)
         tk.Button(self.root, text="Cerrar Sesión", command=self.crear_menu_principal, font=("Arial", 14), padx=10,
                   pady=5, bg="#FFCCCC").pack(pady=10)
 
@@ -130,7 +132,6 @@ class MenuApp:
         self.limpiar_ventana()
         tk.Label(self.root, text="Historial de Reservas", font=("Arial", 16)).pack(pady=10)
 
-        # Crear una tabla usando Treeview
         columnas = ("fecha", "distancia", "tiempo", "hora")
         tabla = ttk.Treeview(self.root, columns=columnas, show="headings", height=10)
         tabla.heading("fecha", text="Fecha:")
@@ -219,6 +220,35 @@ class MenuApp:
             messagebox.showinfo("Estación", "Estación eliminada exitosamente")
             self.crear_menu_principal()
         tk.Button(self.root, text="Eliminar Estación", command=eliminar, font=("Arial", 14), padx=10, pady=5).pack(
+            pady=10)
+        self.volver_boton()
+
+    def ver_quejas_estacion(self):
+        self.limpiar_ventana()
+        tk.Label(self.root, text="Ver Quejas por Estación", font=("Arial", 16)).pack(pady=10)
+
+        tk.Label(self.root, text="Ingrese el ID de la estación:").pack()
+        id_estacion = tk.Entry(self.root, width=30)
+        id_estacion.pack()
+
+        def mostrar_quejas():
+            quejas = GestorCliente.consultar_quejas_por_estacion(id_estacion.get())
+            if not quejas:
+                messagebox.showinfo("Quejas", "No hay quejas para esta estación.")
+                return
+            columnas = ("cliente", "razon", "estado")
+            tabla = ttk.Treeview(self.root, columns=columnas, show="headings", height=10)
+            tabla.heading("cliente", text="Cliente")
+            tabla.heading("razon", text="Razón de la Queja")
+            tabla.heading("estado", text="Estado")
+            tabla.column("cliente", anchor="center", width=100)
+            tabla.column("razon", anchor="center", width=200)
+            tabla.column("estado", anchor="center", width=100)
+            for queja in quejas:
+                cliente_id, razon, estado = queja[1], queja[2], "Abierta" if not queja[3] else "Cerrada"
+                tabla.insert("", "end", values=(cliente_id, razon, estado))
+            tabla.pack(pady=10)
+        tk.Button(self.root, text="Mostrar Quejas", command=mostrar_quejas, font=("Arial", 14), padx=10, pady=5).pack(
             pady=10)
         self.volver_boton()
 

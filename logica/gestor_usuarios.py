@@ -24,12 +24,12 @@ class GestorUsuarios:
                 user = cursor.fetchone()
                 if user:
                     print("Inicio de sesión exitoso como administrador.")
-                    return Administrador(user[0], user[1], user[2], user[3])  # user[0] es el id
+                    return Administrador(user[0], user[1], user[2], user[3])
             else:
                 cursor.execute("SELECT * FROM Cliente WHERE correo = ? AND contrasena = ?", (correo, contrasena))
                 user = cursor.fetchone()
                 if user:
                     print("Inicio de sesión exitoso como cliente.")
-                    return Cliente(user[0], user[1], user[2], user[3])  # user[0] es el id
+                    return Cliente(user[0], user[1], user[2], user[3])
             print("Credenciales incorrectas.")
             return None
